@@ -1,5 +1,6 @@
 package com.example.ExpenseTrackerAPI;
 
+import com.example.ExpenseTrackerAPI.Entity.AppUser;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
