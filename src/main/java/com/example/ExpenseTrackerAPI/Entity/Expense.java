@@ -1,12 +1,11 @@
 package com.example.ExpenseTrackerAPI.Entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.time.LocalDateTime;
 
 @Entity
 @NoArgsConstructor
@@ -18,18 +17,26 @@ public class Expense {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
+    @Column(nullable = false)
     private String title;
 
     private String description;
 
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private Category category;
 
+    private LocalDateTime createdTime;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
     private AppUser appUser;
 
-    public Expense(String title, String description, Category category, AppUser appUser) {
+    public Expense(String title, String description, Category category, LocalDateTime createdTime, AppUser appUser) {
         this.title = title;
         this.description = description;
         this.category = category;
+        this.createdTime = LocalDateTime.now();
         this.appUser = appUser;
     }
 }

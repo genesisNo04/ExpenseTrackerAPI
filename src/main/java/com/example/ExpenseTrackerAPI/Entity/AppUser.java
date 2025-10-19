@@ -20,9 +20,10 @@ public class AppUser {
 
     private String username;
 
-    @OneToOne
+    @OneToOne(mappedBy = "appUser")
     private AuthUser authUser;
 
+    @OneToMany(mappedBy = "appUser", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Expense> expenses;
 
     public AppUser(String username, List<Expense> expenses) {
