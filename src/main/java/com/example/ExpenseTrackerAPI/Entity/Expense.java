@@ -1,5 +1,6 @@
 package com.example.ExpenseTrackerAPI.Entity;
 
+import com.example.ExpenseTrackerAPI.Enum.Category;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,6 +23,8 @@ public class Expense {
 
     private String description;
 
+    private double amount;
+
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private Category category;
@@ -32,11 +35,10 @@ public class Expense {
     @JoinColumn(name = "user_id", nullable = false)
     private AppUser appUser;
 
-    public Expense(String title, String description, Category category, LocalDateTime createdTime, AppUser appUser) {
+    public Expense(String title, String description, double amount, Category category) {
         this.title = title;
         this.description = description;
+        this.amount = amount;
         this.category = category;
-        this.createdTime = LocalDateTime.now();
-        this.appUser = appUser;
     }
 }

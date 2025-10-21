@@ -1,4 +1,4 @@
-package com.example.ExpenseTrackerAPI.Entity;
+package com.example.ExpenseTrackerAPI.Enum;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
