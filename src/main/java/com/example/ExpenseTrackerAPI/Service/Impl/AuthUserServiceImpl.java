@@ -42,12 +42,12 @@ public class AuthUserServiceImpl implements AuthUserService {
 
     @Override
     public boolean existByUsername(String username) {
-        return authUserRepository.existByUsername(username);
+        return authUserRepository.existsByUsername(username);
     }
 
     @Override
     public boolean existByEmail(String email) {
-        return authUserRepository.existByEmail(email);
+        return authUserRepository.existsByEmail(email);
     }
 
     @Override

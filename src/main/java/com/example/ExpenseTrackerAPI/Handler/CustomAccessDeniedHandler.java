@@ -1,4 +1,4 @@
-package com.example.ExpenseTrackerAPI.Config;
+package com.example.ExpenseTrackerAPI.Handler;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

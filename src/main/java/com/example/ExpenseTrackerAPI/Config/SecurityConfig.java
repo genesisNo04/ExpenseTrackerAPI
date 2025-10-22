@@ -1,5 +1,7 @@
 package com.example.ExpenseTrackerAPI.Config;
 
+import com.example.ExpenseTrackerAPI.Handler.CustomAccessDeniedHandler;
+import com.example.ExpenseTrackerAPI.Handler.CustomAuthenticationEntryPoint;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
