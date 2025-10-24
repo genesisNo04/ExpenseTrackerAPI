@@ -29,42 +29,35 @@ public class JwtUtil {
                 .compact();
     }
 
-    private Claims extractToken(String token) {
-        try {
-            return Jwts.parserBuilder()
-                    .setSigningKey(key)
-                    .build()
-                    .parseClaimsJws(token)
-                    .getBody();
-        } catch (Exception e) {
-            return null;
-        }
+    public String extractUsername(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .getSubject();
     }
 
     private boolean isTokenExpired(String token) {
-        Claims claims = extractToken(token);
-        if (claims == null) {
-            return false;
-        }
-        return claims.getExpiration().before(new Date());
+        return Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .getExpiration()
+                .before(new Date());
     }
 
     public boolean validateToken(String token, String username) {
-        Claims claims = extractToken(token);
-        if (claims == null) {
-            return false;
-        }
-
-        return username.equals(claims.getSubject()) && !isTokenExpired(token);
+        return username.equals(extractUsername(token)) && !isTokenExpired(token);
     }
 
-    public String extractUsername(String token) {
-        Claims claims = extractToken(token);
-        return claims != null ? claims.getSubject() : null;
-    }
-
-    public Role extractRole(String token) {
-        Claims claims = extractToken(token);
-        return claims != null ? Role.valueOf(claims.get("role", String.class)) : null;
+    public String extractRole(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .get("role", String.class);
     }
 }

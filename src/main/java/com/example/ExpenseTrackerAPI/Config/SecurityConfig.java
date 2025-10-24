@@ -20,19 +20,22 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http.csrf(csrf -> csrf.disable())
+        http
+                .csrf(csrf -> csrf.disable())
                 .formLogin(form -> form.disable())
                 .httpBasic(basic -> basic.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/v1/user/register", "/v1/user/login", "/v1/user/refresh").permitAll()
+                        .requestMatchers("/v1/user/register/**", "/v1/user/login/**", "/v1/user/refresh/**", "/v1/user/public").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(new CustomAuthenticationEntryPoint())
-                        .accessDeniedHandler(new CustomAccessDeniedHandler()))
-                .build();
+                        .accessDeniedHandler(new CustomAccessDeniedHandler())
+                );
+
+        return http.build();
     }
 
     @Bean
