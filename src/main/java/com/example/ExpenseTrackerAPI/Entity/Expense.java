@@ -31,6 +31,8 @@ public class Expense {
 
     private LocalDateTime createdTime;
 
+    private LocalDateTime lastModifiedTime;
+
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private AppUser appUser;
@@ -40,5 +42,7 @@ public class Expense {
         this.description = description;
         this.amount = amount;
         this.category = category;
+        this.createdTime = LocalDateTime.now();
+        this.lastModifiedTime = LocalDateTime.now();
     }
 }

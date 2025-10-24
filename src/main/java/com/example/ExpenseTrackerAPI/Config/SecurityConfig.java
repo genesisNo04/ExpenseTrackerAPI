@@ -25,7 +25,9 @@ public class SecurityConfig {
                 .formLogin(form -> form.disable())
                 .httpBasic(basic -> basic.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/v1/user/register/**", "/v1/user/login/**", "/v1/user/refresh/**", "/v1/user/public").permitAll()
+                        .requestMatchers("/v1/user/register",
+                                "/v1/user/login",
+                                "/v1/user/refresh").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
