@@ -1,5 +1,6 @@
 package com.example.ExpenseTrackerAPI.Service.Impl;
 
+import com.example.ExpenseTrackerAPI.Entity.AppUser;
 import com.example.ExpenseTrackerAPI.Entity.Expense;
 import com.example.ExpenseTrackerAPI.Exception.ResourceNotFound;
 import com.example.ExpenseTrackerAPI.Repository.ExpenseRepository;
@@ -16,12 +17,12 @@ public class ExpenseServiceImpl implements ExpenseService {
     private ExpenseRepository expenseRepository;
 
     @Override
-    public List<Expense> findAllExpenses() {
-        return expenseRepository.findAll();
+    public List<Expense> findAllExpenses(AppUser appUser) {
+        return expenseRepository.findByAppUser(appUser);
     }
 
     @Override
-    public Expense findExpenseById(long id) {
+    public Expense findExpenseById(long id, AppUser appUser) {
         return expenseRepository.findById(id).orElseThrow(() -> new ResourceNotFound("Expense not found."));
     }
 
@@ -32,8 +33,8 @@ public class ExpenseServiceImpl implements ExpenseService {
 
     @Override
     public void deleteExpense(long id) {
-        Expense expense = findExpenseById(id);
-        expenseRepository.delete(expense);
+//        Expense expense = findExpenseById(id);
+//        expenseRepository.delete(expense);
     }
 
     @Override
