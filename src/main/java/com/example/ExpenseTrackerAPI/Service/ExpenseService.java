@@ -3,6 +3,8 @@ package com.example.ExpenseTrackerAPI.Service;
 import com.example.ExpenseTrackerAPI.Entity.AppUser;
 import com.example.ExpenseTrackerAPI.Entity.Expense;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ExpenseService {
@@ -13,9 +15,11 @@ public interface ExpenseService {
 
     Expense findExpenseById(long id, AppUser appUser);
 
-    Expense findExpenseByTitle(String title);
+    Expense findExpenseByTitle(String title, AppUser appUser);
 
-    void deleteExpense(long id);
+    void deleteExpense(long id, AppUser appUser);
 
-    void expenseSummary();
+    double expenseSummary(AppUser appUser);
+
+    List<Expense> findAllExpensesInDateRange(AppUser appUser, String filter, LocalDate start, LocalDate end);
 }

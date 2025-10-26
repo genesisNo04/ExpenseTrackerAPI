@@ -13,6 +13,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,12 +35,6 @@ public class ExpenseController {
         return ResponseEntity.status(HttpStatus.CREATED).body(expenseDTO);
     }
 
-    @GetMapping
-    public ResponseEntity<List<Expense>> getAllExpense(@AuthenticationPrincipal AuthUser authUser) {
-        List<Expense> expenses = expenseService.findAllExpenses(authUser.getAppUser());
-        return ResponseEntity.ok(expenses);
-    }
-
     @GetMapping("/{id}")
     public ResponseEntity<Expense> getExpenseById(@AuthenticationPrincipal AuthUser authUser, @PathVariable long id) {
         Expense expenses = expenseService.findExpenseById(id, authUser.getAppUser());
@@ -48,9 +44,13 @@ public class ExpenseController {
     @GetMapping
     public ResponseEntity<List<Expense>> getExpenseInDateRange(@AuthenticationPrincipal AuthUser authUser,
                                                                @RequestParam(required = false) String startDate,
-                                                               @RequestParam(required = false) String endDate) {
+                                                               @RequestParam(required = false) String endDate,
+                                                               @RequestParam(required = false) String filter) {
 
-        List<Expense> expenses = expenseService.findAllExpenses(authUser.getAppUser());
+        LocalDate start = (startDate != null) ? LocalDate.parse(startDate) : LocalDate.MIN;
+        LocalDate end = (endDate != null) ? LocalDate.parse(endDate) : LocalDate.MAX;
+
+        List<Expense> expenses = expenseService.findAllExpensesInDateRange(authUser.getAppUser(), filter, start, end);
         return ResponseEntity.ok(expenses);
     }
 }

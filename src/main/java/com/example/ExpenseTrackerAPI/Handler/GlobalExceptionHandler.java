@@ -38,4 +38,10 @@ public class GlobalExceptionHandler {
         Map<String, String> errorBody = Map.of("error", ex.getMessage());
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorBody);
     }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, String>> handleIllegalArgumentException(IllegalArgumentException ex) {
+        Map<String, String> errorBody = Map.of("error", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorBody);
+    }
 }
