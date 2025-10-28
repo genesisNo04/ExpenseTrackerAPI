@@ -1,5 +1,6 @@
 package com.example.ExpenseTrackerAPI.Entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,9 +22,11 @@ public class AppUser {
     private String username;
 
     @OneToOne(mappedBy = "appUser")
+    @JsonManagedReference
     private AuthUser authUser;
 
     @OneToMany(mappedBy = "appUser", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonManagedReference
     private List<Expense> expenses;
 
     public AppUser(String username, List<Expense> expenses) {

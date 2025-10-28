@@ -1,6 +1,7 @@
 package com.example.ExpenseTrackerAPI.Entity;
 
 import com.example.ExpenseTrackerAPI.Enum.Role;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -38,6 +39,7 @@ public class AuthUser implements UserDetails {
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonBackReference
     private AppUser appUser;
 
     public AuthUser(String username, String password, String email, Role role) {

@@ -51,30 +51,38 @@ public class ExpenseServiceImpl implements ExpenseService {
     }
 
     @Override
-    public List<Expense> findAllExpensesInDateRange(AppUser appUser, String filter, LocalDate start, LocalDate end) {
+    public List<Expense> findAllExpensesInDateRange(AppUser appUser, String filter, LocalDateTime start, LocalDateTime end) {
         LocalDate today = LocalDate.now();
+        LocalDate startDate;
+        LocalDate endDate;
 
         switch (filter) {
             case "pastWeek":
-                start = today.minusWeeks(1);
-                end = today;
+                startDate = today.minusWeeks(1);
+                endDate = today;
                 break;
             case "pastMonth":
-                start = today.minusMonths(1);
-                end = today;
+                startDate = today.minusMonths(1);
+                endDate = today;
                 break;
             case "last3Months":
-                start = today.minusMonths(3);
-                end = today;
+                startDate = today.minusMonths(3);
+                endDate = today;
                 break;
             case "custom":
                 if (start == null || end == null) {
                     throw  new IllegalArgumentException("Custom filter requires startDate and endDate");
                 }
+                startDate = start.toLocalDate();
+                endDate = end.toLocalDate();
                 break;
             default:
                 throw new IllegalArgumentException("Illegal filter, required pastWeek, pastMonth, last3Months, custom");
         }
-        return expenseRepository.findByCreatedDateAndAppUser(start, end, appUser);
+
+        LocalDateTime startDateTime = startDate.atStartOfDay();
+        LocalDateTime endDateTime = endDate.plusDays(1).atStartOfDay().minusNanos(1);
+
+        return expenseRepository.findByCreatedTimeBetweenAndAppUser(startDateTime, endDateTime, appUser);
     }
 }

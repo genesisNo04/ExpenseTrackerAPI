@@ -19,7 +19,5 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
 
     List<Expense> findByAppUser(AppUser appUser);
 
-    List<Expense> findByCreatedDateAndAppUser(LocalDate startDate, LocalDate endDate, AppUser appUser);
-
-
+    List<Expense> findByCreatedTimeBetweenAndAppUser(LocalDateTime startDate, LocalDateTime endDate, AppUser appUser);
 }

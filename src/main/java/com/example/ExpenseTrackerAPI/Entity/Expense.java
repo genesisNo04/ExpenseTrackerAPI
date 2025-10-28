@@ -1,6 +1,7 @@
 package com.example.ExpenseTrackerAPI.Entity;
 
 import com.example.ExpenseTrackerAPI.Enum.Category;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -35,6 +36,7 @@ public class Expense {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonBackReference
     private AppUser appUser;
 
     public Expense(String title, String description, double amount, Category category) {

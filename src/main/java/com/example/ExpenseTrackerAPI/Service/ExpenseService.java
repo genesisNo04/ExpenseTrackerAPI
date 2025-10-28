@@ -21,5 +21,5 @@ public interface ExpenseService {
 
     double expenseSummary(AppUser appUser);
 
-    List<Expense> findAllExpensesInDateRange(AppUser appUser, String filter, LocalDate start, LocalDate end);
+    List<Expense> findAllExpensesInDateRange(AppUser appUser, String filter, LocalDateTime start, LocalDateTime end);
 }
