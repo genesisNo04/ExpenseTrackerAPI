@@ -28,13 +28,19 @@ public class ExpenseController {
 
         expenseService.save(expense);
 
+        expenseDTO.setCreatedTime(expense.getCreatedTime());
+        expenseDTO.setModifiedTime(expense.getLastModifiedTime());
+
         return ResponseEntity.status(HttpStatus.CREATED).body(expenseDTO);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Expense> getExpenseById(@AuthenticationPrincipal AuthUser authUser, @PathVariable long id) {
+    public ResponseEntity<ExpenseDTO> getExpenseById(@AuthenticationPrincipal AuthUser authUser, @PathVariable long id) {
         Expense expenses = expenseService.findExpenseById(id, authUser.getAppUser());
-        return ResponseEntity.ok(expenses);
+        ExpenseDTO expenseDTO = new ExpenseDTO(expenses.getTitle(), expenses.getDescription(), expenses.getCategory(), expenses.getAmount());
+        expenseDTO.setModifiedTime(expenses.getLastModifiedTime());
+        expenseDTO.setCreatedTime(expenses.getCreatedTime());
+        return ResponseEntity.ok(expenseDTO);
     }
 
     @GetMapping
@@ -51,5 +57,52 @@ public class ExpenseController {
 
         List<Expense> expenses = expenseService.findAllExpensesInDateRange(authUser.getAppUser(), filter, startDateTime, endDateTime);
         return ResponseEntity.ok(expenses);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ExpenseDTO> updateExpense(@AuthenticationPrincipal AuthUser authUser, @RequestBody ExpenseDTO expenseDTO, @PathVariable long id) {
+        Expense expense = expenseService.findExpenseById(id, authUser.getAppUser());
+
+        expense.setTitle(expenseDTO.getTitle());
+        expense.setDescription(expenseDTO.getDescription());
+        expense.setCategory(expenseDTO.getCategory());
+        expense.setAmount(expenseDTO.getAmount());
+
+        expenseService.save(expense);
+
+        return ResponseEntity.ok(expenseDTO);
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<ExpenseDTO> patchExpense(@AuthenticationPrincipal AuthUser authUser, @RequestBody ExpenseDTO expenseDTO, @PathVariable long id) {
+        Expense expense = expenseService.findExpenseById(id, authUser.getAppUser());
+
+        if (expenseDTO.getTitle() != null) {
+            expense.setTitle(expenseDTO.getTitle());
+        }
+
+        if(expenseDTO.getDescription() != null) {
+            expense.setDescription(expenseDTO.getDescription());
+        }
+
+        if (expenseDTO.getCategory() != null) {
+            expense.setCategory(expenseDTO.getCategory());
+        }
+
+        if (expenseDTO.getAmount() != null) {
+            expense.setAmount(expenseDTO.getAmount());
+        }
+
+        expenseService.save(expense);
+
+        return ResponseEntity.ok(expenseDTO);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteExpense(@AuthenticationPrincipal AuthUser authUser, @PathVariable long id) {
+
+        expenseService.deleteExpense(id, authUser.getAppUser());
+
+        return ResponseEntity.noContent().build();
     }
 }

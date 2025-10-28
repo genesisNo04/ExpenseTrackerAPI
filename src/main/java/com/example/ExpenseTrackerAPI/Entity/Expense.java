@@ -44,7 +44,16 @@ public class Expense {
         this.description = description;
         this.amount = amount;
         this.category = category;
+    }
+
+    @PrePersist
+    protected void onCreate() {
         this.createdTime = LocalDateTime.now();
+        this.lastModifiedTime = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
         this.lastModifiedTime = LocalDateTime.now();
     }
 }
