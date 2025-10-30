@@ -1,5 +1,6 @@
 package com.example.ExpenseTrackerAPI.Handler;
 
+import com.example.ExpenseTrackerAPI.Exception.AccessDeniedException;
 import com.example.ExpenseTrackerAPI.Exception.CredentialsNotFound;
 import com.example.ExpenseTrackerAPI.Exception.DuplicateUserException;
 import com.example.ExpenseTrackerAPI.Exception.ResourceNotFound;
@@ -43,5 +44,11 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleIllegalArgumentException(IllegalArgumentException ex) {
         Map<String, String> errorBody = Map.of("error", ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorBody);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Map<String, String>> handleAccessDeniedException(AccessDeniedException ex) {
+        Map<String, String> errorBody = Map.of("error", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorBody);
     }
 }

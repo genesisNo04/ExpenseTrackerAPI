@@ -1,6 +1,7 @@
 package com.example.ExpenseTrackerAPI.Controller;
 
 import com.example.ExpenseTrackerAPI.DTO.ExpenseDTO;
+import com.example.ExpenseTrackerAPI.DTO.SummaryResponseDTO;
 import com.example.ExpenseTrackerAPI.Entity.AuthUser;
 import com.example.ExpenseTrackerAPI.Entity.Expense;
 import com.example.ExpenseTrackerAPI.Service.ExpenseService;
@@ -47,13 +48,16 @@ public class ExpenseController {
     public ResponseEntity<List<Expense>> getExpenseInDateRange(@AuthenticationPrincipal AuthUser authUser,
                                                                @RequestParam(required = false) String startDate,
                                                                @RequestParam(required = false) String endDate,
-                                                               @RequestParam(required = false) String filter) {
+                                                               @RequestParam(required = false, defaultValue = "custom") String filter) {
 
         LocalDate start = (startDate != null) ? LocalDate.parse(startDate) : LocalDate.of(1970, 1, 1);
         LocalDate end = (endDate != null) ? LocalDate.parse(endDate) : LocalDate.now();
 
         LocalDateTime startDateTime = start.atStartOfDay();
         LocalDateTime endDateTime = end.plusDays(1).atStartOfDay().minusNanos(1);
+
+        System.out.println("start date: " + startDateTime);
+        System.out.println("end date: " + endDateTime);
 
         List<Expense> expenses = expenseService.findAllExpensesInDateRange(authUser.getAppUser(), filter, startDateTime, endDateTime);
         return ResponseEntity.ok(expenses);
@@ -69,6 +73,9 @@ public class ExpenseController {
         expense.setAmount(expenseDTO.getAmount());
 
         expenseService.save(expense);
+
+        expenseDTO.setCreatedTime(expense.getCreatedTime());
+        expenseDTO.setModifiedTime(expense.getLastModifiedTime());
 
         return ResponseEntity.ok(expenseDTO);
     }
@@ -95,7 +102,9 @@ public class ExpenseController {
 
         expenseService.save(expense);
 
-        return ResponseEntity.ok(expenseDTO);
+        ExpenseDTO updateDTO = new ExpenseDTO(expense);
+
+        return ResponseEntity.ok(updateDTO);
     }
 
     @DeleteMapping("/{id}")
@@ -104,5 +113,11 @@ public class ExpenseController {
         expenseService.deleteExpense(id, authUser.getAppUser());
 
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/summary")
+    public ResponseEntity<SummaryResponseDTO> getSummary(@AuthenticationPrincipal AuthUser authUser) {
+        SummaryResponseDTO summaryResponseDTO = new SummaryResponseDTO(expenseService.expenseSummary(authUser.getAppUser()));
+        return ResponseEntity.ok(summaryResponseDTO);
     }
 }

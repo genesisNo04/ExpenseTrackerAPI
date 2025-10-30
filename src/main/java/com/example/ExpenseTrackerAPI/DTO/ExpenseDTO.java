@@ -1,14 +1,17 @@
 package com.example.ExpenseTrackerAPI.DTO;
 
+import com.example.ExpenseTrackerAPI.Entity.Expense;
 import com.example.ExpenseTrackerAPI.Enum.Category;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
 
 @Getter
 @Setter
+@NoArgsConstructor
 public class ExpenseDTO {
 
     private String title;
@@ -28,5 +31,14 @@ public class ExpenseDTO {
         this.description = description;
         this.category = category;
         this.amount = amount;
+    }
+
+    public ExpenseDTO(Expense expense) {
+        this.title = expense.getTitle();
+        this.description = expense.getDescription();
+        this.category = expense.getCategory();
+        this.amount = expense.getAmount();
+        this.createdTime = expense.getCreatedTime();
+        this.modifiedTime = expense.getLastModifiedTime();
     }
 }

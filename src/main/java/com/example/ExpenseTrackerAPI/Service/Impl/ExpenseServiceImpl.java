@@ -2,6 +2,7 @@ package com.example.ExpenseTrackerAPI.Service.Impl;
 
 import com.example.ExpenseTrackerAPI.Entity.AppUser;
 import com.example.ExpenseTrackerAPI.Entity.Expense;
+import com.example.ExpenseTrackerAPI.Exception.AccessDeniedException;
 import com.example.ExpenseTrackerAPI.Exception.ResourceNotFound;
 import com.example.ExpenseTrackerAPI.Repository.ExpenseRepository;
 import com.example.ExpenseTrackerAPI.Service.ExpenseService;
@@ -25,12 +26,24 @@ public class ExpenseServiceImpl implements ExpenseService {
 
     @Override
     public Expense findExpenseById(long id, AppUser appUser) {
-        return expenseRepository.findById(id).orElseThrow(() -> new ResourceNotFound("Expense not found."));
+        Expense expense = expenseRepository.findById(id).orElseThrow(() -> new ResourceNotFound("Expense not found."));
+
+        if (!expense.getAppUser().getId().equals(appUser.getId())) {
+            throw  new AccessDeniedException("You are not authorized to access this expense. This expense does not belong to you.");
+        }
+
+        return expense;
     }
 
     @Override
     public Expense findExpenseByTitle(String title, AppUser appUser) {
-        return expenseRepository.findByTitleAndAppUser(title, appUser).orElseThrow(() -> new ResourceNotFound("Expense not found."));
+        Expense expense = expenseRepository.findByTitle(title).orElseThrow(() -> new ResourceNotFound("Expense not found."));
+
+        if (!expense.getAppUser().getId().equals(appUser.getId())) {
+            throw  new AccessDeniedException("You are not authorized to access this expense. This expense does not belong to you.");
+        }
+
+        return expense;
     }
 
     @Override
@@ -47,7 +60,8 @@ public class ExpenseServiceImpl implements ExpenseService {
     @Override
     public double expenseSummary(AppUser appUser) {
         List<Expense> expenses = findAllExpenses(appUser);
-        return expenses.stream().map(Expense::getAmount).reduce(0.0, Double::sum);
+        double total = expenses.stream().map(Expense::getAmount).reduce(0.0, Double::sum);
+        return Math.round(total * 100.0) / 100.0;
     }
 
     @Override
@@ -56,7 +70,7 @@ public class ExpenseServiceImpl implements ExpenseService {
         LocalDate startDate;
         LocalDate endDate;
 
-        switch (filter) {
+        switch (filter != null ? filter : "") {
             case "pastWeek":
                 startDate = today.minusWeeks(1);
                 endDate = today;
