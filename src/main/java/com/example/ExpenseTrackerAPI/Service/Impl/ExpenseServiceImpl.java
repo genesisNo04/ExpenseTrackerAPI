@@ -29,7 +29,7 @@ public class ExpenseServiceImpl implements ExpenseService {
         Expense expense = expenseRepository.findById(id).orElseThrow(() -> new ResourceNotFound("Expense not found."));
 
         if (!expense.getAppUser().getId().equals(appUser.getId())) {
-            throw  new AccessDeniedException("You are not authorized to access this expense. This expense does not belong to you.");
+            throw new AccessDeniedException("You are not authorized to access this expense. This expense does not belong to you.");
         }
 
         return expense;
