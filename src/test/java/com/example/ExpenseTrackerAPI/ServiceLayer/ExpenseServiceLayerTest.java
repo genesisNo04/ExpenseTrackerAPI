@@ -12,6 +12,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -193,5 +197,75 @@ public class ExpenseServiceLayerTest {
         assertThrows(AccessDeniedException.class, () -> {
             expenseService.deleteExpense(id, appUser);
         });
+    }
+
+    @Test
+    void shouldReturnSummaryAllExpense() {
+        AppUser appUser = new AppUser();
+        appUser.setId(1L);
+
+        Expense expense = new Expense("test title 1", "Test description 1", 100.0, Category.CLOTHING);
+        expense.setAppUser(appUser);
+
+        Expense expense1 = new Expense("test title 2", "Test description 2", 300.0, Category.CLOTHING);
+        expense1.setAppUser(appUser);
+
+        Expense expense2 = new Expense("test title 3", "Test description 3", 150.0, Category.CLOTHING);
+        expense2.setAppUser(appUser);
+
+        when(expenseRepository.findByAppUser(appUser)).thenReturn(List.of(expense, expense1, expense2));
+
+        assertEquals(550.00, expenseService.expenseSummary(appUser));
+    }
+
+    @Test
+    void shouldReturnZeroSummaryAllExpense() {
+        AppUser appUser = new AppUser();
+        appUser.setId(1L);
+
+        when(expenseRepository.findByAppUser(appUser)).thenReturn(List.of());
+
+        assertEquals(0.0, expenseService.expenseSummary(appUser));
+    }
+
+    @Test
+    void shouldReturnExpenseInDateRange() {
+        AppUser appUser = new AppUser();
+        appUser.setId(1L);
+
+        Expense expense1 = new Expense("test title 2", "Test description 2", 300.0, Category.CLOTHING);
+        expense1.setAppUser(appUser);
+
+        LocalDate start = LocalDate.parse("2025-10-20");
+        LocalDate end = LocalDate.parse("2025-10-30");
+
+        LocalDateTime startDateTime = start.atStartOfDay();
+        LocalDateTime endDateTime = end.plusDays(1).atStartOfDay().minusNanos(1);
+
+        when(expenseRepository.findByCreatedTimeBetweenAndAppUser(startDateTime, endDateTime, appUser)).thenReturn(List.of(expense1));
+
+        List<Expense> expectedExpense = expenseService.findAllExpensesInDateRange(appUser, "custom", startDateTime, endDateTime);
+
+        assertEquals(1, expectedExpense.size());
+        assertEquals("test title 2", expectedExpense.getFirst().getTitle());
+        assertEquals(300.0, expectedExpense.getFirst().getAmount());
+    }
+
+    @Test
+    void shouldUpdateExpense() {
+        AppUser appUser = new AppUser();
+        appUser.setId(1L);
+
+        Expense expense = new Expense("test title update", "Test description update", 300.0, Category.CLOTHING);
+        expense.setAppUser(appUser);
+
+        when(expenseRepository.save(expense)).thenReturn(expense);
+
+        Expense expenseExpected = expenseService.save(expense);
+
+        assertEquals(expenseExpected.getTitle(), expense.getTitle());
+        assertEquals(expenseExpected.getDescription(), expense.getDescription());
+        assertEquals(expenseExpected.getAmount(), expense.getAmount());
+        assertEquals(expenseExpected.getCategory(), expense.getCategory());
     }
 }
