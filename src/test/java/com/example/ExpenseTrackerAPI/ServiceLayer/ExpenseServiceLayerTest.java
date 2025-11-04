@@ -252,6 +252,92 @@ public class ExpenseServiceLayerTest {
     }
 
     @Test
+    void shouldThrowInvalidArgumentInDateRange() {
+        AppUser appUser = new AppUser();
+        appUser.setId(1L);
+
+        LocalDate start = LocalDate.parse("2025-10-20");
+        LocalDate end = LocalDate.parse("2025-10-30");
+
+        LocalDateTime startDateTime = start.atStartOfDay();
+        LocalDateTime endDateTime = end.plusDays(1).atStartOfDay().minusNanos(1);
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            expenseService.findAllExpensesInDateRange(appUser, "invalid filter", startDateTime, endDateTime);
+        });
+    }
+
+    @Test
+    void shouldThrowInvalidArgumentForNullDateInDateRange() {
+        AppUser appUser = new AppUser();
+        appUser.setId(1L);
+
+        LocalDate start = LocalDate.parse("2025-10-20");
+        LocalDate end = LocalDate.parse("2025-10-30");
+
+        LocalDateTime startDateTime = start.atStartOfDay();
+        LocalDateTime endDateTime = end.plusDays(1).atStartOfDay().minusNanos(1);
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            expenseService.findAllExpensesInDateRange(appUser, "custom", null, null);
+        });
+    }
+
+    @Test
+    void shouldReturnExpensePastWeek() {
+        AppUser appUser = new AppUser();
+        appUser.setId(1L);
+
+        Expense expense1 = new Expense("test title 2", "Test description 2", 300.0, Category.CLOTHING);
+        expense1.setAppUser(appUser);
+
+        when(expenseRepository.findByCreatedTimeBetweenAndAppUser(any(LocalDateTime.class), any(LocalDateTime.class), eq(appUser))).thenReturn(List.of(expense1));
+
+        List<Expense> resultExpense = expenseService.findAllExpensesInDateRange(appUser, "pastWeek", null, null);
+
+        assertEquals("test title 2", resultExpense.getFirst().getTitle());
+        assertEquals("Test description 2", resultExpense.getFirst().getDescription());
+        assertEquals(300.0, resultExpense.getFirst().getAmount());
+        assertEquals(Category.CLOTHING, resultExpense.getFirst().getCategory());
+    }
+
+    @Test
+    void shouldReturnExpensePastMonth() {
+        AppUser appUser = new AppUser();
+        appUser.setId(1L);
+
+        Expense expense1 = new Expense("test title 2", "Test description 2", 300.0, Category.CLOTHING);
+        expense1.setAppUser(appUser);
+
+        when(expenseRepository.findByCreatedTimeBetweenAndAppUser(any(LocalDateTime.class), any(LocalDateTime.class), eq(appUser))).thenReturn(List.of(expense1));
+
+        List<Expense> resultExpense = expenseService.findAllExpensesInDateRange(appUser, "pastMonth", null, null);
+
+        assertEquals("test title 2", resultExpense.getFirst().getTitle());
+        assertEquals("Test description 2", resultExpense.getFirst().getDescription());
+        assertEquals(300.0, resultExpense.getFirst().getAmount());
+        assertEquals(Category.CLOTHING, resultExpense.getFirst().getCategory());
+    }
+
+    @Test
+    void shouldReturnExpensePastThreeMonths() {
+        AppUser appUser = new AppUser();
+        appUser.setId(1L);
+
+        Expense expense1 = new Expense("test title 2", "Test description 2", 300.0, Category.CLOTHING);
+        expense1.setAppUser(appUser);
+
+        when(expenseRepository.findByCreatedTimeBetweenAndAppUser(any(LocalDateTime.class), any(LocalDateTime.class), eq(appUser))).thenReturn(List.of(expense1));
+
+        List<Expense> resultExpense = expenseService.findAllExpensesInDateRange(appUser, "last3Months", null, null);
+
+        assertEquals("test title 2", resultExpense.getFirst().getTitle());
+        assertEquals("Test description 2", resultExpense.getFirst().getDescription());
+        assertEquals(300.0, resultExpense.getFirst().getAmount());
+        assertEquals(Category.CLOTHING, resultExpense.getFirst().getCategory());
+    }
+
+    @Test
     void shouldUpdateExpense() {
         AppUser appUser = new AppUser();
         appUser.setId(1L);
