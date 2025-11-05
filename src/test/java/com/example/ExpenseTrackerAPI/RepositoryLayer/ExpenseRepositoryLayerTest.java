@@ -15,6 +15,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -57,26 +58,42 @@ public class ExpenseRepositoryLayerTest {
         this.appUser = authUser.getAppUser();
     }
 
+    private Expense createExpense(String title, String description, double amount, Category category, LocalDateTime time) {
+        Expense expense = new Expense(title, description, amount, category);
+        expense.setAppUser(appUser);
+        if (time != null) {
+            expense.setCreatedTime(time);
+        }
+        return expenseRepository.save(expense);
+    }
+
     @Test
     void shouldFindExpenseByTitleAndAppUser() {
-        Expense expense = new Expense("Groceries", "Weekly food", 50.0, Category.GROCERIES);
-        expense.setAppUser(appUser);
-        expenseRepository.save(expense);
+        Expense expense = createExpense("Groceries", "Weekly food", 50.0, Category.GROCERIES, null);
 
         Optional<Expense> result = expenseRepository.findByTitleAndAppUser(expense.getTitle(), appUser);
 
-        assertTrue(result.isPresent());
-        assertEquals(result.get().getTitle(), expense.getTitle());
-        assertEquals(result.get().getDescription(), expense.getDescription());
-        assertEquals(result.get().getAmount(), expense.getAmount());
-        assertEquals(result.get().getCategory(), expense.getCategory());
+        assertEquals(expense.getTitle(), result.get().getTitle());
+        assertEquals(expense.getDescription(), result.get().getDescription());
+        assertEquals(expense.getAmount(), result.get().getAmount());
+        assertEquals(expense.getCategory(), result.get().getCategory());
+    }
+
+    @Test
+    void shouldReturnEmptyWhenExpenseNotFoundWithTitle() {
+        Optional<Expense> result = expenseRepository.findByTitleAndAppUser("Not exist", appUser);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void shouldReturnEmptyWhenExpenseNotFoundWithId() {
+        Optional<Expense> result = expenseRepository.findByIdAndAppUser(1, appUser);
+        assertTrue(result.isEmpty());
     }
 
     @Test
     void shouldFindExpenseByIdAndAppUser() {
-        Expense expense = new Expense("Groceries", "Weekly food", 50.0, Category.GROCERIES);
-        expense.setAppUser(appUser);
-        expenseRepository.save(expense);
+        Expense expense = createExpense("Groceries", "Weekly food", 50.0, Category.GROCERIES, null);
 
         Optional<Expense> result = expenseRepository.findByIdAndAppUser(expense.getId(), appUser);
 
@@ -89,75 +106,49 @@ public class ExpenseRepositoryLayerTest {
 
     @Test
     void shouldFindExpenseByAppUser() {
-        Expense expense = new Expense("Groceries", "Weekly food", 50.0, Category.GROCERIES);
-        expense.setAppUser(appUser);
-        expenseRepository.save(expense);
-
-        Expense expense1 = new Expense("Health", "Annual checkup", 100.0, Category.HEALTH);
-        expense1.setAppUser(appUser);
-        expenseRepository.save(expense1);
-
-        Expense expense2 = new Expense("Electronics", "Bought TV", 300.0, Category.ELECTRONIC);
-        expense2.setAppUser(appUser);
-        expenseRepository.save(expense2);
+        Expense expense = createExpense("Groceries", "Weekly food", 50.0, Category.GROCERIES, null);
+        Expense expense1 = createExpense("Health", "Annual checkup", 100.0, Category.HEALTH, null);
+        Expense expense2 = createExpense("Electronics", "Bought TV", 300.0, Category.ELECTRONIC, null);
 
         List<Expense> result = expenseRepository.findByAppUser(appUser);
+        result.sort(Comparator.comparing(Expense::getTitle));
 
         assertEquals(3, result.size());
-        assertEquals(expense.getTitle(), result.getFirst().getTitle());
-        assertEquals(expense.getDescription(), result.getFirst().getDescription());
-        assertEquals(expense.getAmount(), result.getFirst().getAmount());
-        assertEquals(expense.getCategory(), result.getFirst().getCategory());
+        assertEquals(expense2.getTitle(), result.getFirst().getTitle());
+        assertEquals(expense2.getDescription(), result.getFirst().getDescription());
+        assertEquals(expense2.getAmount(), result.getFirst().getAmount());
+        assertEquals(expense2.getCategory(), result.getFirst().getCategory());
 
-        assertEquals(expense1.getTitle(), result.get(1).getTitle());
-        assertEquals(expense1.getDescription(), result.get(1).getDescription());
-        assertEquals(expense1.getAmount(), result.get(1).getAmount());
-        assertEquals(expense1.getCategory(), result.get(1).getCategory());
+        assertEquals(expense.getTitle(), result.get(1).getTitle());
+        assertEquals(expense.getDescription(), result.get(1).getDescription());
+        assertEquals(expense.getAmount(), result.get(1).getAmount());
+        assertEquals(expense.getCategory(), result.get(1).getCategory());
 
-        assertEquals(expense2.getTitle(), result.get(2).getTitle());
-        assertEquals(expense2.getDescription(), result.get(2).getDescription());
-        assertEquals(expense2.getAmount(), result.get(2).getAmount());
-        assertEquals(expense2.getCategory(), result.get(2).getCategory());
+        assertEquals(expense1.getTitle(), result.get(2).getTitle());
+        assertEquals(expense1.getDescription(), result.get(2).getDescription());
+        assertEquals(expense1.getAmount(), result.get(2).getAmount());
+        assertEquals(expense1.getCategory(), result.get(2).getCategory());
     }
 
     @Test
     void shouldFindExpenseByTitle() {
-        Expense expense = new Expense("Groceries", "Weekly food", 50.0, Category.GROCERIES);
-        expense.setAppUser(appUser);
-        expenseRepository.save(expense);
-
-        Expense expense1 = new Expense("Electronics", "Weekly food", 50.0, Category.ELECTRONIC);
-        expense1.setAppUser(appUser);
-        expenseRepository.save(expense1);
+        Expense expense = createExpense("Groceries", "Weekly food", 50.0, Category.GROCERIES, null);
+        Expense expense1 = createExpense("Electronics", "Weekly food", 50.0, Category.ELECTRONIC, null);
 
         Optional<Expense> result = expenseRepository.findByTitle(expense.getTitle());
 
-        assertTrue(result.isPresent());
-        assertEquals(result.get().getTitle(), expense.getTitle());
-        assertEquals(result.get().getDescription(), expense.getDescription());
-        assertEquals(result.get().getAmount(), expense.getAmount());
-        assertEquals(result.get().getCategory(), expense.getCategory());
+        assertEquals(expense.getTitle(), result.get().getTitle());
+        assertEquals(expense.getDescription(), result.get().getDescription());
+        assertEquals(expense.getAmount(), result.get().getAmount());
+        assertEquals(expense.getCategory(), result.get().getCategory());
     }
 
     @Test
     void shouldFindByCreatedTimePastWeek() {
         LocalDateTime now = LocalDateTime.of(2025, 1, 15, 10, 0);
-
-        Expense expense = new Expense("Groceries", "Weekly food", 50.0, Category.GROCERIES);
-        expense.setAppUser(appUser);
-        expense.setCreatedTime(now.minusHours(2));
-        expenseRepository.save(expense);
-
-        Expense expense1 = new Expense("Health", "Annual checkup", 100.0, Category.HEALTH);
-        expense1.setAppUser(appUser);
-        expense1.setCreatedTime(now.minusWeeks(1).minusHours(1));
-        expenseRepository.save(expense1);
-
-        Expense expense2 = new Expense("Electronics", "Bought TV", 300.0, Category.ELECTRONIC);
-        expense2.setAppUser(appUser);
-        expense2.setCreatedTime(now.minusWeeks(2));
-        expenseRepository.save(expense2);
-
+        Expense expense = createExpense("Groceries", "Weekly food", 50.0, Category.GROCERIES, now.minusHours(2));
+        Expense expense1 = createExpense("Health", "Annual checkup", 100.0, Category.HEALTH, now.minusWeeks(1).minusHours(1));
+        Expense expense2 = createExpense("Electronics", "Bought TV", 300.0, Category.ELECTRONIC, now.minusWeeks(2));
 
         List<Expense> result = expenseRepository.findByCreatedTimeBetweenAndAppUser(now.minusWeeks(1), now, appUser);
 
@@ -172,21 +163,9 @@ public class ExpenseRepositoryLayerTest {
     void shouldFindByCreatedTimePastMonth() {
         LocalDateTime now = LocalDateTime.of(2025, 1, 15, 10, 0);
 
-        Expense expense = new Expense("Groceries", "Weekly food", 50.0, Category.GROCERIES);
-        expense.setAppUser(appUser);
-        expense.setCreatedTime(now.minusMonths(1));
-        expenseRepository.save(expense);
-
-        Expense expense1 = new Expense("Health", "Annual checkup", 100.0, Category.HEALTH);
-        expense1.setAppUser(appUser);
-        expense1.setCreatedTime(now.minusMonths(2));
-        expenseRepository.save(expense1);
-
-        Expense expense2 = new Expense("Electronics", "Bought TV", 300.0, Category.ELECTRONIC);
-        expense2.setAppUser(appUser);
-        expense2.setCreatedTime(now.minusMonths(4));
-        expenseRepository.save(expense2);
-
+        Expense expense = createExpense("Groceries", "Weekly food", 50.0, Category.GROCERIES, now.minusMonths(1));
+        Expense expense1 = createExpense("Health", "Annual checkup", 100.0, Category.HEALTH, now.minusMonths(2));
+        Expense expense2 = createExpense("Electronics", "Bought TV", 300.0, Category.ELECTRONIC, now.minusMonths(4));
 
         List<Expense> result = expenseRepository.findByCreatedTimeBetweenAndAppUser(now.minusMonths(1), now, appUser);
 
@@ -201,20 +180,9 @@ public class ExpenseRepositoryLayerTest {
     void shouldFindByCreatedTimePast3Months() {
         LocalDateTime now = LocalDateTime.of(2025, 1, 15, 10, 0);
 
-        Expense expense = new Expense("Groceries", "Weekly food", 50.0, Category.GROCERIES);
-        expense.setAppUser(appUser);
-        expense.setCreatedTime(now.minusMonths(1));
-        expenseRepository.save(expense);
-
-        Expense expense1 = new Expense("Health", "Annual checkup", 100.0, Category.HEALTH);
-        expense1.setAppUser(appUser);
-        expense1.setCreatedTime(now.minusMonths(2));
-        expenseRepository.save(expense1);
-
-        Expense expense2 = new Expense("Electronics", "Bought TV", 300.0, Category.ELECTRONIC);
-        expense2.setAppUser(appUser);
-        expense2.setCreatedTime(now.minusMonths(4));
-        expenseRepository.save(expense2);
+        Expense expense = createExpense("Groceries", "Weekly food", 50.0, Category.GROCERIES, now.minusMonths(1));
+        Expense expense1 = createExpense("Health", "Annual checkup", 100.0, Category.HEALTH, now.minusMonths(2));
+        Expense expense2 = createExpense("Electronics", "Bought TV", 300.0, Category.ELECTRONIC, now.minusMonths(4));
 
         List<Expense> result = expenseRepository.findByCreatedTimeBetweenAndAppUser(now.minusMonths(3), now, appUser);
 
@@ -230,20 +198,9 @@ public class ExpenseRepositoryLayerTest {
         LocalDateTime start = LocalDateTime.of(2025, 1, 15, 10, 0);
         LocalDateTime end = LocalDateTime.of(2025, 3, 15, 10, 0);
 
-        Expense expense = new Expense("Groceries", "Weekly food", 50.0, Category.GROCERIES);
-        expense.setAppUser(appUser);
-        expense.setCreatedTime(start.plusDays(2));
-        expenseRepository.save(expense);
-
-        Expense expense1 = new Expense("Health", "Annual checkup", 100.0, Category.HEALTH);
-        expense1.setAppUser(appUser);
-        expense1.setCreatedTime(start.minusMonths(2));
-        expenseRepository.save(expense1);
-
-        Expense expense2 = new Expense("Electronics", "Bought TV", 300.0, Category.ELECTRONIC);
-        expense2.setAppUser(appUser);
-        expense2.setCreatedTime(end.minusWeeks(2));
-        expenseRepository.save(expense2);
+        Expense expense = createExpense("Groceries", "Weekly food", 50.0, Category.GROCERIES, start.plusDays(2));
+        Expense expense1 = createExpense("Health", "Annual checkup", 100.0, Category.HEALTH, start.minusMonths(2));
+        Expense expense2 = createExpense("Electronics", "Bought TV", 300.0, Category.ELECTRONIC, end.minusWeeks(2));
 
         List<Expense> result = expenseRepository.findByCreatedTimeBetweenAndAppUser(start, end, appUser);
 
