@@ -37,7 +37,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResourceNotFound.class)
     public ResponseEntity<Map<String, String>> handleResourceNotFound(ResourceNotFound ex) {
         Map<String, String> errorBody = Map.of("error", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorBody);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorBody);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
