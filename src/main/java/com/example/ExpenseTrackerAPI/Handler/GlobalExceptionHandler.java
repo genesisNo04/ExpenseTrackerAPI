@@ -25,7 +25,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DuplicateUserException.class)
     public ResponseEntity<Map<String, String>> handleDuplicateUserException(DuplicateUserException ex) {
         Map<String, String> errorBody = Map.of("error", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorBody);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorBody);
     }
 
     @ExceptionHandler(BadCredentialsException.class)

@@ -8,7 +8,6 @@ import com.example.ExpenseTrackerAPI.Entity.AuthUser;
 import com.example.ExpenseTrackerAPI.Entity.Expense;
 import com.example.ExpenseTrackerAPI.Enum.Category;
 import com.example.ExpenseTrackerAPI.Enum.Role;
-import com.example.ExpenseTrackerAPI.Exception.CredentialsNotFound;
 import com.example.ExpenseTrackerAPI.Exception.ResourceNotFound;
 import com.example.ExpenseTrackerAPI.Handler.GlobalExceptionHandler;
 import com.example.ExpenseTrackerAPI.Service.ExpenseService;
@@ -60,6 +59,14 @@ public class ExpenseControllerTest {
         return appUser;
     }
 
+    private void mockAuthentication(AppUser appUser) {
+        AuthUser authUser = appUser.getAuthUser();
+
+        UsernamePasswordAuthenticationToken authenticationToken =
+                new UsernamePasswordAuthenticationToken(authUser, null, authUser.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+    }
+
     private Expense createExpense(String title, String description, Double amount, Category category, LocalDateTime created, LocalDateTime modified) {
         Expense expense = new Expense();
         expense.setTitle(title != null ? title : "Test expense 1");
@@ -75,11 +82,7 @@ public class ExpenseControllerTest {
     @Test
     void shouldCreateExpenseSuccessfully() throws Exception {
         AppUser appUser = createAppUser();
-        AuthUser authUser = appUser.getAuthUser();
-
-        UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(authUser, null, authUser.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        mockAuthentication(appUser);
 
         Expense expense = new Expense("Expense 5 user1", "expense 5 description user1", 80.39, Category.GROCERIES);
         expense.setAppUser(appUser);
@@ -105,11 +108,7 @@ public class ExpenseControllerTest {
     @Test
     void shouldReturnExpenseWithId() throws Exception {
         AppUser appUser = createAppUser();
-        AuthUser authUser = appUser.getAuthUser();
-
-        UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(authUser, null, authUser.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        mockAuthentication(appUser);
 
         Expense expense = createExpense(null, null, null, null, null, null);
         expense.setAppUser(appUser);
@@ -132,11 +131,7 @@ public class ExpenseControllerTest {
     @Test
     void shouldThrowErrorExpenseWithIdNotFound() throws Exception {
         AppUser appUser = createAppUser();
-        AuthUser authUser = appUser.getAuthUser();
-
-        UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(authUser, null, authUser.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        mockAuthentication(appUser);
 
         when(expenseService.findExpenseById(1, appUser)).thenThrow(new ResourceNotFound("Expense not found."));
 
@@ -148,11 +143,7 @@ public class ExpenseControllerTest {
     @Test
     void shouldReturnExpensePastWeek() throws Exception {
         AppUser appUser = createAppUser();
-        AuthUser authUser = appUser.getAuthUser();
-
-        UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(authUser, null, authUser.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        mockAuthentication(appUser);
 
         Expense expense = createExpense(null, null, null, null, null, null);
         expense.setAppUser(appUser);
@@ -187,11 +178,7 @@ public class ExpenseControllerTest {
     @Test
     void shouldThrowErrorIncorrectFilter() throws Exception {
         AppUser appUser = createAppUser();
-        AuthUser authUser = appUser.getAuthUser();
-
-        UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(authUser, null, authUser.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        mockAuthentication(appUser);
 
         when(expenseService.findAllExpensesInDateRange(
                 eq(appUser), eq("unknown"), any(), any()))
@@ -205,11 +192,7 @@ public class ExpenseControllerTest {
     @Test
     void shouldThrowErrorMissingDate() throws Exception {
         AppUser appUser = createAppUser();
-        AuthUser authUser = appUser.getAuthUser();
-
-        UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(authUser, null, authUser.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        mockAuthentication(appUser);
 
         when(expenseService.findAllExpensesInDateRange(
                 eq(appUser), eq("custom"), any(), any()))
@@ -223,11 +206,7 @@ public class ExpenseControllerTest {
     @Test
     void shouldReturnUpdateExpense() throws Exception {
         AppUser appUser = createAppUser();
-        AuthUser authUser = appUser.getAuthUser();
-
-        UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(authUser, null, authUser.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        mockAuthentication(appUser);
 
         Expense expense = createExpense(null, null, null, null, null, null);
         expense.setAppUser(appUser);
@@ -254,13 +233,30 @@ public class ExpenseControllerTest {
     }
 
     @Test
+    void shouldThrowErrorWhenUpdatingNonExistentExpense() throws Exception {
+        AppUser appUser = createAppUser();
+        mockAuthentication(appUser);
+
+        when(expenseService.findExpenseById(1L, appUser)).thenThrow(new ResourceNotFound("Expense not found."));
+
+        mockMvc.perform(put("/v1/expense/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                            {
+                                 "title": "Expense 5 user1",
+                                 "description": "expense 5 description user1",
+                                 "category": "GROCERIES",
+                                 "amount": "80.39"
+                             }
+                        """))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Expense not found."));
+    }
+
+    @Test
     void shouldReturnPartiallyUpdateExpense() throws Exception {
         AppUser appUser = createAppUser();
-        AuthUser authUser = appUser.getAuthUser();
-
-        UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(authUser, null, authUser.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        mockAuthentication(appUser);
 
         Expense expense = createExpense(null, null, null, null, null, null);
         expense.setAppUser(appUser);
@@ -269,7 +265,7 @@ public class ExpenseControllerTest {
         when(expenseService.findExpenseById(expense.getId(), expense.getAppUser())).thenReturn(expense);
         when(expenseService.save(expense)).thenReturn(expense);
 
-        mockMvc.perform(put("/v1/expense/1")
+        mockMvc.perform(patch("/v1/expense/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                             {
@@ -289,11 +285,7 @@ public class ExpenseControllerTest {
     @Test
     void shouldReturnMessageDeleteExpense() throws Exception {
         AppUser appUser = createAppUser();
-        AuthUser authUser = appUser.getAuthUser();
-
-        UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(authUser, null, authUser.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        mockAuthentication(appUser);
 
         Expense expense = createExpense(null, null, null, null, null, null);
         expense.setAppUser(appUser);
@@ -308,18 +300,26 @@ public class ExpenseControllerTest {
     }
 
     @Test
-    void shouldThrowErrorDeleteNotFoundExpenseExpense() throws Exception {
+    void shouldThrowErrorWhenDeletingNonExistentExpense() throws Exception {
         AppUser appUser = createAppUser();
-        AuthUser authUser = appUser.getAuthUser();
-
-        UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(authUser, null, authUser.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        mockAuthentication(appUser);
 
         doThrow(new ResourceNotFound("Expense not found.")).when(expenseService).deleteExpense(1L, appUser);
 
         mockMvc.perform(delete("/v1/expense/1"))
                 .andExpect(status().is4xxClientError())
                 .andExpect(jsonPath("$.error").value("Expense not found."));
+    }
+
+    @Test
+    void shouldReturnSummary() throws Exception {
+        AppUser appUser = createAppUser();
+        mockAuthentication(appUser);
+
+        when(expenseService.expenseSummary(appUser)).thenReturn(305.5);
+
+        mockMvc.perform(get("/v1/expense/summary"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.summary").value(305.5));
     }
 }
