@@ -21,7 +21,7 @@ public class AuthUserServiceImpl implements AuthUserService {
     @Override
     public AuthUser registerUser(AuthUser authUser) {
         if (existByEmail(authUser.getEmail()) || existByUsername(authUser.getUsername())) {
-            throw new DuplicateUserException("Username or email already taken");
+            throw new DuplicateUserException("Username or email already taken.");
         }
         authUser.setPassword(passwordEncoder.encode(authUser.getPassword()));
         return authUserRepository.save(authUser);
