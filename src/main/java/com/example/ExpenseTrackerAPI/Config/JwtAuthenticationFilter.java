@@ -2,6 +2,7 @@ package com.example.ExpenseTrackerAPI.Config;
 
 import com.example.ExpenseTrackerAPI.Entity.AuthUser;
 import com.example.ExpenseTrackerAPI.Service.AuthUserService;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -27,7 +28,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
-        System.out.println("Filtering request path: " + request.getServletPath());
         return path.startsWith("/v1/user/register") ||
                 path.startsWith("/v1/user/login") ||
                 path.startsWith("/v1/user/refresh");
@@ -36,26 +36,31 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        final String header = request.getHeader("Authorization");
-        System.out.println("Token: " + header);
+        try {
+            final String header = request.getHeader("Authorization");
 
-        if (header != null && header.startsWith("Bearer ")) {
-            String jwt = header.substring(7);
-            String username = jwtUtil.extractUsername(jwt);
-            System.out.println("Username: " + header);
+            if (header != null && header.startsWith("Bearer ")) {
+                String jwt = header.substring(7);
+                String username = jwtUtil.extractUsername(jwt);
 
-            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                AuthUser authUser = authUserService.findByUsername(username);
+                if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    AuthUser authUser = authUserService.findByUsername(username);
 
-                if (jwtUtil.validateToken(jwt, username)) {
-                    UsernamePasswordAuthenticationToken authToken =
-                            new UsernamePasswordAuthenticationToken(authUser, null, authUser.getAuthorities());
-                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                    if (jwtUtil.validateToken(jwt, username)) {
+                        UsernamePasswordAuthenticationToken authToken =
+                                new UsernamePasswordAuthenticationToken(authUser, null, authUser.getAuthorities());
+                        authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        SecurityContextHolder.getContext().setAuthentication(authToken);
+                    }
                 }
             }
-        }
 
-        filterChain.doFilter(request, response);
+            filterChain.doFilter(request, response);
+
+        } catch (JwtException e) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\": \"Invalid or expired JWT token.\"}");
+        }
     }
 }
