@@ -50,8 +50,8 @@ public class Expense {
     protected void onCreate() {
         if (this.createdTime == null) {
             this.createdTime = LocalDateTime.now();
-            this.lastModifiedTime = LocalDateTime.now();
         }
+        this.lastModifiedTime = LocalDateTime.now();
     }
 
     @PreUpdate

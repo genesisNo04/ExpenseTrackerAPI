@@ -26,7 +26,9 @@ public class ExpenseController {
     public ResponseEntity<ExpenseDTO> createExpense(@AuthenticationPrincipal AuthUser authUser, @RequestBody ExpenseDTO expenseDTO) {
         Expense expense = new Expense(expenseDTO.getTitle(), expenseDTO.getDescription(), expenseDTO.getAmount(), expenseDTO.getCategory());
         expense.setAppUser(authUser.getAppUser());
-
+        if (expenseDTO.getCreatedTime() != null) {
+            expense.setCreatedTime(expenseDTO.getCreatedTime());
+        }
         expenseService.save(expense);
 
         expenseDTO.setCreatedTime(expense.getCreatedTime());
