@@ -58,9 +58,6 @@ public class ExpenseController {
         LocalDateTime startDateTime = start.atStartOfDay();
         LocalDateTime endDateTime = end.plusDays(1).atStartOfDay().minusNanos(1);
 
-        System.out.println("start date: " + startDateTime);
-        System.out.println("end date: " + endDateTime);
-
         List<Expense> expenses = expenseService.findAllExpensesInDateRange(authUser.getAppUser(), filter, startDateTime, endDateTime);
         return ResponseEntity.ok(expenses);
     }

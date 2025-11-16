@@ -10,15 +10,20 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
-
+import java.time.ZoneId;
+import java.time.Clock;
 import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -38,6 +43,9 @@ public class ExpenseIntegrationTesting {
 
     @Autowired
     private ExpenseRepository expenseRepository;
+
+    @MockitoBean
+    private Clock clock;
 
     private String userRequestBody(String username, String password, String email) {
         return String.format("""
@@ -111,6 +119,13 @@ public class ExpenseIntegrationTesting {
     void cleanDatabase() {
         expenseRepository.deleteAll();
         authUserRepository.deleteAll();
+
+        Instant fixedInstant = LocalDateTime.of(2025, 11, 16, 0, 0)
+                .atZone(ZoneId.systemDefault())
+                .toInstant();
+
+        when(clock.instant()).thenReturn(fixedInstant);
+        when(clock.getZone()).thenReturn(ZoneId.systemDefault());
     }
 
     @Test
@@ -179,7 +194,7 @@ public class ExpenseIntegrationTesting {
 
         mockMvc.perform(get("/v1/expense/" + id)
                         .header("Authorization", "Bearer " + token))
-                .andExpect(status().isFound())
+                .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value(RESOURCE_NOT_FOUND_ERROR_MESSAGE));
     }
 
@@ -219,7 +234,7 @@ public class ExpenseIntegrationTesting {
     void shouldReturnAllExpense() throws Exception {
         String token = registerUser("user", "user", "user@gmail.com");
         createExpense("expense1", "expense description 1", Category.GROCERIES, 153.6, token, LocalDateTime.of(2025, 11, 14, 16, 30, 30, 0));
-        createExpense("expense2", "expense description 2", Category.ELECTRONIC, 358.6, token, LocalDateTime.of(2025, 12, 14, 16, 30, 30, 0));
+        createExpense("expense2", "expense description 2", Category.ELECTRONIC, 358.6, token, LocalDateTime.of(2025, 11, 14, 16, 30, 30, 0));
         createExpense("expense3", "expense description 3", Category.LEISURE, 1503.6, token, LocalDateTime.of(2025, 10, 14, 16, 30, 30, 0));
 
         mockMvc.perform(get("/v1/expense")
@@ -288,7 +303,7 @@ public class ExpenseIntegrationTesting {
         String token = registerUser("user", "user", "user@gmail.com");
         createExpense("expense1", "expense description 1", Category.GROCERIES, 153.6, token, LocalDateTime.of(2025, 10, 12, 16, 30, 30, 0));
         createExpense("expense2", "expense description 2", Category.ELECTRONIC, 358.6, token, LocalDateTime.of(2025, 11, 06, 16, 30, 30, 0));
-        createExpense("expense3", "expense description 3", Category.LEISURE, 1503.6, token, LocalDateTime.of(2025, 10, 15, 16, 30, 30, 0));
+        createExpense("expense3", "expense description 3", Category.LEISURE, 1503.6, token, LocalDateTime.of(2025, 10, 18, 16, 30, 30, 0));
 
         mockMvc.perform(get("/v1/expense?filter=pastMonth")
                         .header("Authorization", "Bearer " + token))
