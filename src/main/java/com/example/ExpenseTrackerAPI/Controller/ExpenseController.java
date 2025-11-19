@@ -1,10 +1,12 @@
 package com.example.ExpenseTrackerAPI.Controller;
 
+import com.example.ExpenseTrackerAPI.Config.RateLimitService;
 import com.example.ExpenseTrackerAPI.DTO.ExpenseDTO;
 import com.example.ExpenseTrackerAPI.DTO.SummaryResponseDTO;
 import com.example.ExpenseTrackerAPI.Entity.AuthUser;
 import com.example.ExpenseTrackerAPI.Entity.Expense;
 import com.example.ExpenseTrackerAPI.Service.ExpenseService;
+import io.github.bucket4j.Bucket;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -24,6 +26,9 @@ public class ExpenseController {
     @Autowired
     private ExpenseService expenseService;
 
+    @Autowired
+    private RateLimitService rateLimitService;
+
     @PostMapping
     public ResponseEntity<ExpenseDTO> createExpense(@AuthenticationPrincipal AuthUser authUser, @RequestBody ExpenseDTO expenseDTO) {
         Expense expense = new Expense(expenseDTO.getTitle(), expenseDTO.getDescription(), expenseDTO.getAmount(), expenseDTO.getCategory());
@@ -41,6 +46,18 @@ public class ExpenseController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ExpenseDTO> getExpenseById(@AuthenticationPrincipal AuthUser authUser, @PathVariable long id) {
+
+        String userKey = String.valueOf(authUser.getAppUser().getId());
+        Bucket bucket = rateLimitService.resolveBucket(userKey);
+        var probe = bucket.tryConsumeAndReturnRemaining(1);
+
+        if (!probe.isConsumed()) {
+            long waitSeconds = probe.getNanosToWaitForRefill() / 1_000_000_000;
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .header("Retry-After", String.valueOf(waitSeconds))
+                    .body(null);
+        }
+
         Expense expenses = expenseService.findExpenseById(id, authUser.getAppUser());
         ExpenseDTO expenseDTO = new ExpenseDTO(expenses.getTitle(), expenses.getDescription(), expenses.getCategory(), expenses.getAmount());
         expenseDTO.setModifiedTime(expenses.getLastModifiedTime());
