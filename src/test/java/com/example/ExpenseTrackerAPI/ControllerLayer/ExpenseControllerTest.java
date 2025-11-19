@@ -86,7 +86,7 @@ public class ExpenseControllerTest {
 
         Expense expense = new Expense("Expense 5 user1", "expense 5 description user1", 80.39, Category.GROCERIES);
         expense.setAppUser(appUser);
-        when(expenseService.save(expense)).thenReturn(expense);
+        when(expenseService.save(expense, appUser)).thenReturn(expense);
 
         mockMvc.perform(post("/v1/expense")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -213,7 +213,7 @@ public class ExpenseControllerTest {
         expense.setId(1);
 
         when(expenseService.findExpenseById(expense.getId(), expense.getAppUser())).thenReturn(expense);
-        when(expenseService.save(expense)).thenReturn(expense);
+        when(expenseService.save(expense, appUser)).thenReturn(expense);
 
         mockMvc.perform(put("/v1/expense/1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -263,7 +263,7 @@ public class ExpenseControllerTest {
         expense.setId(1);
 
         when(expenseService.findExpenseById(expense.getId(), expense.getAppUser())).thenReturn(expense);
-        when(expenseService.save(expense)).thenReturn(expense);
+        when(expenseService.save(expense, appUser)).thenReturn(expense);
 
         mockMvc.perform(patch("/v1/expense/1")
                         .contentType(MediaType.APPLICATION_JSON)

@@ -7,6 +7,8 @@ import com.example.ExpenseTrackerAPI.Exception.ResourceNotFound;
 import com.example.ExpenseTrackerAPI.Repository.ExpenseRepository;
 import com.example.ExpenseTrackerAPI.Service.ExpenseService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -20,11 +22,13 @@ public class ExpenseServiceImpl implements ExpenseService {
     private ExpenseRepository expenseRepository;
 
     @Override
+    @Cacheable(value = "expenseByUser", key = "#appUser.id")
     public List<Expense> findAllExpenses(AppUser appUser) {
         return expenseRepository.findByAppUser(appUser);
     }
 
     @Override
+    @Cacheable(value = "expenseId", key = "#appUser.id + '-' + #id")
     public Expense findExpenseById(long id, AppUser appUser) {
         Expense expense = expenseRepository.findById(id).orElseThrow(() -> new ResourceNotFound("Expense not found."));
 
@@ -36,6 +40,7 @@ public class ExpenseServiceImpl implements ExpenseService {
     }
 
     @Override
+    @Cacheable(value = "expenseId", key = "#appUser.id + '-' + #title")
     public Expense findExpenseByTitle(String title, AppUser appUser) {
         Expense expense = expenseRepository.findByTitle(title).orElseThrow(() -> new ResourceNotFound("Expense not found."));
 
@@ -47,17 +52,20 @@ public class ExpenseServiceImpl implements ExpenseService {
     }
 
     @Override
-    public Expense save(Expense expense) {
+    @CacheEvict(value = {"expenseByUser", "expenseSummary"},  key = "#appUser.id")
+    public Expense save(Expense expense, AppUser appUser) {
         return expenseRepository.save(expense);
     }
 
     @Override
+    @CacheEvict(value = {"expenseByUser", "expenseSummary"},  key = "#appUser.id")
     public void deleteExpense(long id, AppUser appUser) {
         Expense expense = findExpenseById(id, appUser);
         expenseRepository.delete(expense);
     }
 
     @Override
+    @Cacheable(value = "expenseSummary", key = "#appUser.id")
     public double expenseSummary(AppUser appUser) {
         List<Expense> expenses = findAllExpenses(appUser);
         double total = expenses.stream().map(Expense::getAmount).reduce(0.0, Double::sum);
@@ -65,6 +73,7 @@ public class ExpenseServiceImpl implements ExpenseService {
     }
 
     @Override
+    @Cacheable(value = "expenseByUser", key = "#appUser.id")
     public List<Expense> findAllExpensesInDateRange(AppUser appUser, String filter, LocalDateTime start, LocalDateTime end) {
         LocalDate today = LocalDate.now();
         LocalDate startDate;

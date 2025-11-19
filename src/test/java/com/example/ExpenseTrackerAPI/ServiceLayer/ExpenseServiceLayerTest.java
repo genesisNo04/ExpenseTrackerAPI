@@ -143,7 +143,7 @@ public class ExpenseServiceLayerTest {
 
         when(expenseRepository.save(expense)).thenReturn(expense);
 
-        Expense expenseResponse = expenseService.save(expense);
+        Expense expenseResponse = expenseService.save(expense, appUser);
 
         assertEquals("Test title", expenseResponse.getTitle());
         assertEquals("Test description 1", expenseResponse.getDescription());
@@ -347,7 +347,7 @@ public class ExpenseServiceLayerTest {
 
         when(expenseRepository.save(expense)).thenReturn(expense);
 
-        Expense expenseExpected = expenseService.save(expense);
+        Expense expenseExpected = expenseService.save(expense, appUser);
 
         assertEquals(expenseExpected.getTitle(), expense.getTitle());
         assertEquals(expenseExpected.getDescription(), expense.getDescription());

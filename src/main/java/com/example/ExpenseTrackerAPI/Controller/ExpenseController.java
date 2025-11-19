@@ -25,14 +25,13 @@ public class ExpenseController {
     private ExpenseService expenseService;
 
     @PostMapping
-    @CacheEvict(value = {"expenseByUser", "expenseSummary"},  key = "#authUser.appUser.id")
     public ResponseEntity<ExpenseDTO> createExpense(@AuthenticationPrincipal AuthUser authUser, @RequestBody ExpenseDTO expenseDTO) {
         Expense expense = new Expense(expenseDTO.getTitle(), expenseDTO.getDescription(), expenseDTO.getAmount(), expenseDTO.getCategory());
         expense.setAppUser(authUser.getAppUser());
         if (expenseDTO.getCreatedTime() != null) {
             expense.setCreatedTime(expenseDTO.getCreatedTime());
         }
-        expenseService.save(expense);
+        expenseService.save(expense, authUser.getAppUser());
 
         expenseDTO.setCreatedTime(expense.getCreatedTime());
         expenseDTO.setModifiedTime(expense.getLastModifiedTime());
@@ -41,7 +40,6 @@ public class ExpenseController {
     }
 
     @GetMapping("/{id}")
-    @Cacheable(value = "expenseId", key = "#authUser.appUser.id + '-' + #id")
     public ResponseEntity<ExpenseDTO> getExpenseById(@AuthenticationPrincipal AuthUser authUser, @PathVariable long id) {
         Expense expenses = expenseService.findExpenseById(id, authUser.getAppUser());
         ExpenseDTO expenseDTO = new ExpenseDTO(expenses.getTitle(), expenses.getDescription(), expenses.getCategory(), expenses.getAmount());
@@ -51,8 +49,6 @@ public class ExpenseController {
     }
 
     @GetMapping
-    @Cacheable(value = "expenseByUser",
-            key = "#authUser.appUser.id")
     public ResponseEntity<List<Expense>> getExpenseInDateRange(@AuthenticationPrincipal AuthUser authUser,
                                                                @RequestParam(required = false) String startDate,
                                                                @RequestParam(required = false) String endDate,
@@ -69,7 +65,6 @@ public class ExpenseController {
     }
 
     @PutMapping("/{id}")
-    @CacheEvict(value = {"expenseByUser", "expenseSummary"}, key = "#authUser.appUser.id")
     public ResponseEntity<ExpenseDTO> updateExpense(@AuthenticationPrincipal AuthUser authUser, @RequestBody ExpenseDTO expenseDTO, @PathVariable long id) {
         Expense expense = expenseService.findExpenseById(id, authUser.getAppUser());
 
@@ -78,7 +73,7 @@ public class ExpenseController {
         expense.setCategory(expenseDTO.getCategory());
         expense.setAmount(expenseDTO.getAmount());
 
-        expenseService.save(expense);
+        expenseService.save(expense, authUser.getAppUser());
 
         expenseDTO.setCreatedTime(expense.getCreatedTime());
         expenseDTO.setModifiedTime(expense.getLastModifiedTime());
@@ -87,7 +82,6 @@ public class ExpenseController {
     }
 
     @PatchMapping("/{id}")
-    @CacheEvict(value = {"expenseByUser", "expenseSummary"}, key = "#authUser.appUser.id")
     public ResponseEntity<ExpenseDTO> patchExpense(@AuthenticationPrincipal AuthUser authUser, @RequestBody ExpenseDTO expenseDTO, @PathVariable long id) {
         Expense expense = expenseService.findExpenseById(id, authUser.getAppUser());
 
@@ -107,7 +101,7 @@ public class ExpenseController {
             expense.setAmount(expenseDTO.getAmount());
         }
 
-        expenseService.save(expense);
+        expenseService.save(expense, authUser.getAppUser());
 
         ExpenseDTO updateDTO = new ExpenseDTO(expense);
 
@@ -115,7 +109,6 @@ public class ExpenseController {
     }
 
     @DeleteMapping("/{id}")
-    @CacheEvict(value = {"expenseByUser", "expenseSummary"}, key = "#authUser.appUser.id")
     public ResponseEntity<Void> deleteExpense(@AuthenticationPrincipal AuthUser authUser, @PathVariable long id) {
 
         expenseService.deleteExpense(id, authUser.getAppUser());
@@ -124,7 +117,6 @@ public class ExpenseController {
     }
 
     @GetMapping("/summary")
-    @Cacheable(value = "expenseSummary", key = "#authUser.appUser.id")
     public ResponseEntity<SummaryResponseDTO> getSummary(@AuthenticationPrincipal AuthUser authUser) {
         SummaryResponseDTO summaryResponseDTO = new SummaryResponseDTO(expenseService.expenseSummary(authUser.getAppUser()));
         return ResponseEntity.ok(summaryResponseDTO);

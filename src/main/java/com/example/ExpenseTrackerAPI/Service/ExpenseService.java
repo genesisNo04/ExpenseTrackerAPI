@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface ExpenseService {
 
-    Expense save(Expense expense);
+    Expense save(Expense expense, AppUser appUser);
 
     List<Expense> findAllExpenses(AppUser appUser);
 
